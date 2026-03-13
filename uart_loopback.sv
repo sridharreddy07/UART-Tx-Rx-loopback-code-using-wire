@@ -1,0 +1,31 @@
+module uart_loopback(
+    input  logic clk,
+    input  logic rst,
+    input  logic tx_start,
+    input  logic [7:0] data_in,
+    output logic [7:0] data_out,
+    output logic data_valid
+);
+
+logic tx_line; // connection between TX and RX
+
+// Instantiate UART TX
+uart_tx_with_baud uart_tx_inst (
+    .clk(clk),
+    .rst(rst),
+    .tx_start(tx_start),
+    .data_in(data_in),
+    .tx(tx_line),
+    .busy()   // we can ignore busy in this top module
+);
+
+// Instantiate UART RX
+uart_rx uart_rx_inst (
+    .clk(clk),
+    .rst(rst),
+    .rx(tx_line),
+    .data_out(data_out),
+    .data_valid(data_valid)
+);
+
+endmodule

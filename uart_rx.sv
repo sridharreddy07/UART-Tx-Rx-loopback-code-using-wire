@@ -1,0 +1,85 @@
+`timescale 1ns/1ps
+module uart_rx (
+    input  logic clk,
+    input  logic rst,
+    input  logic rx,
+    output logic [7:0] data_out,
+    output logic data_valid
+);
+
+    parameter BAUD_DIV = 5208;
+
+    typedef enum logic [1:0] {IDLE, START, DATA, STOP} state_t;
+    state_t state;
+
+    logic [12:0] bit_cnt;
+    logic [2:0]  data_idx;
+    logic [7:0]  shift_reg;
+
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            state      <= IDLE;
+            bit_cnt    <= 0;
+            data_idx   <= 0;
+            shift_reg  <= 0;
+            data_out   <= 0;
+            data_valid <= 0;
+        end else begin
+            data_valid <= 0;
+
+            case (state)
+
+                IDLE: begin
+                    if (rx == 0) begin
+                        state   <= START;
+                        bit_cnt <= 0;
+                    end
+                end
+
+                // Wait half bit time
+                START: begin
+                    if (bit_cnt == (BAUD_DIV/2)) begin
+                        if (rx == 0) begin
+                            state    <= DATA;
+                            bit_cnt  <= 0;
+                            data_idx <= 0;
+                        end else begin
+                            state <= IDLE; // false start
+                        end
+                    end else begin
+                        bit_cnt <= bit_cnt + 1;
+                    end
+                end
+
+                // Sample each bit every BAUD_DIV cycles
+                DATA: begin
+                    if (bit_cnt == BAUD_DIV-1) begin
+                        bit_cnt   <= 0;
+                        shift_reg <= {rx, shift_reg[7:1]};
+
+                        if (data_idx == 7)
+                            state <= STOP;
+                        else
+                            data_idx <= data_idx + 1;
+
+                    end else begin
+                        bit_cnt <= bit_cnt + 1;
+                    end
+                end
+
+                STOP: begin
+                    if (bit_cnt == BAUD_DIV-1) begin
+                        data_out   <= shift_reg;
+                        data_valid <= 1;
+                        state      <= IDLE;
+                        bit_cnt    <= 0;
+                    end else begin
+                        bit_cnt <= bit_cnt + 1;
+                    end
+                end
+
+            endcase
+        end
+    end
+
+endmodule
