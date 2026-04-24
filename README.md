@@ -87,7 +87,7 @@ here it will wait for 5207 positive cycyles again for one more baud tick till th
 then it enters into stop case where tx=1 // stop bit and state== IDLE.
 
 Now RX with baud
-here we have to send the values to tx by bit by bite using send_tx_byte function waiting time is 5208*20 ns for each bit as it was written in the test bench.
+here we have to send the values to tx by bit by bit using send_tx_byte function waiting time is 5208*20 ns for each bit as it was written in the test bench.
 So total 8 bits and for initial bit we have to wait for first baud_tick +700 ns  so for total it is (9*104160)= (937440+700)ns we have to wait for complete data transfer.
 so we have to wait atleast 1/2 baud tick to begin checking receiving data so 938140 + 2604 = 940744 to check dout is correct or not then we can declare D_Valid as 1
 so case (state)
@@ -164,7 +164,7 @@ IN TX_INSTANSTIATE
 IN RX_INSTANSTIATE
 .rx(tx_line)
 
-here tx line which acts as rx line. and you the attached waveform.
+here tx line which acts as rx line. and you ca see the attached waveform.
 
 
 
